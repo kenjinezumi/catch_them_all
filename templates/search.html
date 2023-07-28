@@ -1,0 +1,124 @@
+{% load static %}
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Catch Them All</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Catch Them All</h1>
+    </header>
+
+    <main>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search for a Pokémon...">
+            <button id="find-pokemon-btn">Find a Pokémon</button>
+            <button id="random-pokemon-btn">Random Pokémon</button>
+        </div>
+        <div id="search-results">
+            <!-- Search results will be displayed here -->
+            <table id="pokemon-table">
+                <tr>
+                    <th>Name</th>
+                    <th>Abilities</th>
+                    <th>Types</th>
+                    <th>Stats</th>
+                </tr>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        <p>Built using the PokeAPI</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById("search-input");
+            const findPokemonBtn = document.getElementById("find-pokemon-btn");
+            const randomPokemonBtn = document.getElementById("random-pokemon-btn");
+            const searchResults = document.getElementById("search-results");
+            const pokemonTable = document.getElementById("pokemon-table");
+
+            // Function to display the search results in the table
+            function displayResults(results) {
+                // Clear previous search results
+                pokemonTable.innerHTML = "<tr><th>ID</th><th>Name</th><th>Abilities</th><th>Types</th><th>Stats</th></tr>";
+
+                if (results.length === 0) {
+                    const emptyRow = document.createElement("tr");
+                    emptyRow.innerHTML = "<td colspan='5'>No results found.</td>";
+                    pokemonTable.appendChild(emptyRow);
+                } else {
+                    for (const result of results) {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${result.id}</td>
+                            <td>${result.name}</td>
+                            <td>${result.abilities.join(", ")}</td>
+                            <td>${result.types.join(", ")}</td>
+                            <td>
+                                ${Object.entries(result.stats).map(([stat, value]) => `${stat}: ${value}`).join("<br>")}
+                            </td>
+                        `;
+                        pokemonTable.appendChild(row);
+                    }
+                }
+            }
+
+            // Function to fetch search results using AJAX
+            function fetchSearchResults(searchTerm) {
+                // Make an AJAX request to the Django backend to fetch search results
+                fetch(`/search-pokemon/?q=${encodeURIComponent(searchTerm)}`)
+                    .then(response => response.json())
+                    .then(data => displayResults(data))
+                    .catch(error => {
+                        console.error("Error fetching search results:", error);
+                        const errorRow = document.createElement("tr");
+                        errorRow.innerHTML = "<td colspan='5'>Error fetching search results. Please try again later.</td>";
+                        pokemonTable.appendChild(errorRow);
+                    });
+            }
+
+            // Event listener for "Find a Pokémon" button
+            findPokemonBtn.addEventListener("click", function () {
+                const searchTerm = searchInput.value.trim();
+                if (searchTerm !== "") {
+                    fetchSearchResults(searchTerm);
+                }
+            });
+
+            // Event listener for "Random Pokémon" button
+            randomPokemonBtn.addEventListener("click", function () {
+                // Make an AJAX request to the Django backend to fetch a random Pokémon
+                fetch("/random-pokemon/")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data) {
+                            displayResults([data]);
+                        } else {
+                            const emptyRow = document.createElement("tr");
+                            emptyRow.innerHTML = "<td colspan='5'>No results found.</td>";
+                            pokemonTable.appendChild(emptyRow);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error fetching random Pokémon:", error);
+                        const errorRow = document.createElement("tr");
+                        errorRow.innerHTML = "<td colspan='5'>Error fetching random Pokémon. Please try again later.</td>";
+                        pokemonTable.appendChild(errorRow);
+                    });
+            });
+
+            // TO DO Prepopulate search bar with latest search query
+            const latestSearchQuery = "{{ latest_search_query }}";
+            if (latestSearchQuery) {
+                searchInput.value = latestSearchQuery;
+            }
+        });
+    </script>
+</body>
+</html>

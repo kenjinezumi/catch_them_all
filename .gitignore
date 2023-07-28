@@ -1,0 +1,35 @@
+# Python/Django specific
+*.pyc
+*.pyo
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.sqlite3
+*.db
+*.log
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Development files
+*.bak
+*.swp
+*.tmp
+.DS_Store
+
+# Media and static files (if managed outside of Django's static and media directories)
+media/
+static/
+
+# Ignore sensitive or environment-specific information
+.env
+*.env
+
+# Ignore dependencies installed via Poetry
+poetry.lock
